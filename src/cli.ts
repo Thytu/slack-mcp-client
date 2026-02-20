@@ -1,4 +1,3 @@
-#!/usr/bin/env npx tsx
 import { login, createConnectedClient, listTools, callTool } from "./client.js";
 import { clearTokenFile } from "./token-store.js";
 
