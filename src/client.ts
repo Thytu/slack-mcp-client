@@ -18,11 +18,14 @@ function getConfig() {
   };
 }
 
-export interface ConnectOptions {
+export interface LoginOptions {
   headless?: boolean;
 }
 
-export async function createConnectedClient(opts?: ConnectOptions): Promise<Client> {
+/**
+ * Run the full OAuth login flow. Use this for the `login` command.
+ */
+export async function login(opts?: LoginOptions): Promise<void> {
   const config = getConfig();
   const headless = opts?.headless ?? false;
 
@@ -49,14 +52,15 @@ export async function createConnectedClient(opts?: ConnectOptions): Promise<Clie
 
   try {
     await client.connect(transport);
-    return client;
+    await client.close();
+    console.log("Logged in successfully.");
+    return;
   } catch (err) {
     if (!(err instanceof UnauthorizedError)) {
       throw err;
     }
   }
 
-  // Auth required — get the auth code either via callback server or manual paste
   let authCode: string;
 
   if (headless) {
@@ -81,7 +85,42 @@ export async function createConnectedClient(opts?: ConnectOptions): Promise<Clie
 
   const freshClient = new Client({ name: "slack-mcp-client", version: "0.1.0" });
   await freshClient.connect(freshTransport);
-  return freshClient;
+  await freshClient.close();
+  console.log("Logged in successfully.");
+}
+
+/**
+ * Connect using cached tokens. Fails if not authenticated.
+ */
+export async function createConnectedClient(): Promise<Client> {
+  const config = getConfig();
+
+  const authProvider = new SlackOAuthProvider({
+    clientId: config.clientId,
+    callbackPort: config.callbackPort,
+    onRedirect: () => {
+      // Don't open anything — just fail below
+    },
+  });
+
+  const client = new Client({ name: "slack-mcp-client", version: "0.1.0" });
+
+  const transport = new StreamableHTTPClientTransport(
+    new URL(config.serverUrl),
+    { authProvider },
+  );
+
+  try {
+    await client.connect(transport);
+    return client;
+  } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      throw new Error(
+        "Not authenticated. Run `slack-mcp login` (or `slack-mcp --headless login`) first.",
+      );
+    }
+    throw err;
+  }
 }
 
 export async function listTools(client: Client): Promise<void> {

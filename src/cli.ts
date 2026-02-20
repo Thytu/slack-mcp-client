@@ -1,14 +1,14 @@
 #!/usr/bin/env npx tsx
-import { createConnectedClient, listTools, callTool } from "./client.js";
+import { login, createConnectedClient, listTools, callTool } from "./client.js";
 import { clearTokenFile } from "./token-store.js";
 
 const USAGE = `Usage:
-  slack-mcp [--headless] login                     Force re-authentication
-  slack-mcp [--headless] tools                     List available tools
-  slack-mcp [--headless] call <tool> [json-args]   Call a tool with optional JSON arguments
+  slack-mcp login [--headless]        Authenticate with Slack
+  slack-mcp tools                     List available tools
+  slack-mcp call <tool> [json-args]   Call a tool with optional JSON arguments
 
 Options:
-  --headless   Don't open a browser; print the auth URL and prompt for the redirect URL`;
+  --headless   (login only) Print the auth URL instead of opening a browser`;
 
 function parseArgs(argv: string[]) {
   const args = argv.slice(2);
@@ -25,20 +25,16 @@ async function main() {
     process.exit(0);
   }
 
-  const connectOpts = { headless };
-
   switch (command) {
     case "login": {
       clearTokenFile();
       console.log("Cleared saved tokens.");
-      const client = await createConnectedClient(connectOpts);
-      await client.close();
-      console.log("Logged in successfully.");
+      await login({ headless });
       break;
     }
 
     case "tools": {
-      const client = await createConnectedClient(connectOpts);
+      const client = await createConnectedClient();
       await listTools(client);
       await client.close();
       break;
@@ -62,7 +58,7 @@ async function main() {
         }
       }
 
-      const client = await createConnectedClient(connectOpts);
+      const client = await createConnectedClient();
       await callTool(client, toolName, args);
       await client.close();
       break;

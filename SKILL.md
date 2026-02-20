@@ -10,18 +10,37 @@ This skill provides guidance for using the `slack-mcp-client` CLI to search, rea
 
 Apply this skill when you need to interact with Slack programmatically — searching for messages, reading channels/threads, sending messages, finding users, or managing canvases — without a GUI or IDE integration.
 
-## Invocation
+## Authentication
 
-All commands follow this pattern:
+**You must authenticate before using any tools.** Run login once — the token is cached and reused.
+
+### If you are an AI agent (no browser)
+
+```bash
+npx tsx src/cli.ts login --headless
+```
+
+This will:
+1. Print a Slack authorization URL
+2. Wait for you to provide the redirect URL
+
+**You do NOT have a browser. Do NOT try to open the URL.** Instead:
+1. Show the authorization URL to the user and ask them to open it
+2. Tell the user: "After you approve, Slack will redirect to a localhost URL that fails to load. This is expected. Copy the full URL from your browser's address bar and paste it here."
+3. Take the URL the user gives you and write it to the CLI's stdin
+
+Once authenticated, you never need `--headless` again. All subsequent commands work without it.
+
+### If running on a machine with a browser
+
+```bash
+npx tsx src/cli.ts login
+```
+
+## Invocation
 
 ```bash
 npx tsx src/cli.ts call <tool_name> '<json_args>'
-```
-
-In headless environments (no browser), add `--headless`:
-
-```bash
-npx tsx src/cli.ts --headless call <tool_name> '<json_args>'
 ```
 
 ## Tool Reference
@@ -123,6 +142,7 @@ npx tsx src/cli.ts call slack_send_message '{"channel_id":"U123456","message":"H
 
 - Tool results are JSON on **stdout** — safe to pipe to `jq` or other tools.
 - Auth prompts and errors go to **stderr**.
+- If you get "Not authenticated", run `npx tsx src/cli.ts login --headless` first.
 
 ## Common Pitfalls
 
