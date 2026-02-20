@@ -43,7 +43,7 @@ The flow:
 6. The human pastes it back into the CLI (which is waiting at "Paste the redirect URL here:")
 7. Done — token is cached
 
-**If you are an AI agent:** you do NOT have a browser. Do NOT try to open the URL yourself. Print the URL, ask the human to open it, and ask them to give you back the redirect URL. Then write that URL to the waiting process's stdin.
+**If you are an AI agent:** Do NOT try to open the URL yourself. Print the URL, ask the human to open it, and ask them to give you back the redirect URL. Then write that URL to the waiting process's stdin.
 
 ### Re-authenticate
 
