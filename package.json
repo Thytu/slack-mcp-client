@@ -2,6 +2,9 @@
   "name": "slack-mcp-client",
   "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "slack-mcp": "src/cli.ts"
+  },
   "scripts": {
     "start": "tsx src/cli.ts",
     "tools": "tsx src/cli.ts tools",

@@ -4,43 +4,18 @@ description: Guidance for using the slack-mcp-client CLI to interact with Slack
 
 # Slack MCP Client
 
-This skill provides guidance for using the `slack-mcp-client` CLI to search, read, and send messages in Slack from the terminal.
-
-## When to Use
-
-Apply this skill when you need to interact with Slack programmatically — searching for messages, reading channels/threads, sending messages, finding users, or managing canvases — without a GUI or IDE integration.
-
-## Authentication
-
-**You must authenticate before using any tools.** Run login once — the token is cached and reused.
-
-### If you are an AI agent (no browser)
-
-```bash
-npx tsx src/cli.ts login --headless
-```
-
-This will:
-1. Print a Slack authorization URL
-2. Wait for you to provide the redirect URL
-
-**You do NOT have a browser. Do NOT try to open the URL.** Instead:
-1. Show the authorization URL to the user and ask them to open it
-2. Tell the user: "After you approve, Slack will redirect to a localhost URL that fails to load. This is expected. Copy the full URL from your browser's address bar and paste it here."
-3. Take the URL the user gives you and write it to the CLI's stdin
-
-Once authenticated, you never need `--headless` again. All subsequent commands work without it.
-
-### If running on a machine with a browser
-
-```bash
-npx tsx src/cli.ts login
-```
+Use the `slack-mcp-client` CLI to search, read, and send messages in Slack from the terminal.
 
 ## Invocation
 
 ```bash
-npx tsx src/cli.ts call <tool_name> '<json_args>'
+slack-mcp call <tool_name> '<json_args>'
+```
+
+To list all available tools:
+
+```bash
+slack-mcp tools
 ```
 
 ## Tool Reference
@@ -112,37 +87,52 @@ Example: `'{"query":"budget after:2025-01-01","content_types":"files"}'`
 
 ```bash
 # 1. Find the channel ID
-npx tsx src/cli.ts call slack_search_channels '{"query":"engineering"}'
+slack-mcp call slack_search_channels '{"query":"engineering"}'
 
 # 2. Read recent messages
-npx tsx src/cli.ts call slack_read_channel '{"channel_id":"C062HBQQ0GL"}'
+slack-mcp call slack_read_channel '{"channel_id":"C062HBQQ0GL"}'
 ```
 
 ### Search and dig into a thread
 
 ```bash
 # 1. Search for the topic
-npx tsx src/cli.ts call slack_search_public '{"query":"deployment issue"}'
+slack-mcp call slack_search_public '{"query":"deployment issue"}'
 
 # 2. Read the full thread using channel_id and message_ts from results
-npx tsx src/cli.ts call slack_read_thread '{"channel_id":"C062HBQQ0GL","message_ts":"1234567890.123456"}'
+slack-mcp call slack_read_thread '{"channel_id":"C062HBQQ0GL","message_ts":"1234567890.123456"}'
 ```
 
 ### Find a user and message them
 
 ```bash
 # 1. Find the user
-npx tsx src/cli.ts call slack_search_users '{"query":"jane"}'
+slack-mcp call slack_search_users '{"query":"jane"}'
 
 # 2. Send a DM (use their user_id as channel_id)
-npx tsx src/cli.ts call slack_send_message '{"channel_id":"U123456","message":"Hey, quick question..."}'
+slack-mcp call slack_send_message '{"channel_id":"U123456","message":"Hey, quick question..."}'
 ```
+
+## Authentication
+
+If you get "Not authenticated", you need to run the login flow yourself:
+
+1. Run `slack-mcp login --headless`
+2. The CLI will print a Slack authorization URL to stderr
+3. **Do NOT try to open the URL.** Show the URL to the user and ask them to:
+   - Open it in their browser
+   - Approve the app in Slack
+   - After approval, Slack redirects to a localhost URL that fails to load — **this is expected**
+   - Copy the full URL from the browser's address bar and paste it back to you
+4. Write the redirect URL the user gives you to the CLI's stdin
+5. Once login succeeds, retry the original command
+
+Authentication only needs to happen once — the token is cached and reused for all subsequent commands.
 
 ## Output
 
 - Tool results are JSON on **stdout** — safe to pipe to `jq` or other tools.
 - Auth prompts and errors go to **stderr**.
-- If you get "Not authenticated", run `npx tsx src/cli.ts login --headless` first.
 
 ## Common Pitfalls
 
